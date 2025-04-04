@@ -84,8 +84,8 @@ class ControlFlowGraphBuilder {
             var lastIndex = 0
             map.forEach { index in
                 let block = cfg.newBasicBlock(type: .deleted, startIndex: lastIndex, endIndex: index)
-                block.startAt = method.queryOpcodeOffset(index: lastIndex)
-                block.endAt = method.queryOpcodeOffset(index: index)
+                block.startAt = lastIndex
+                block.endAt = index
                 lastIndex = index + 1
             }
             // Build Blocks
