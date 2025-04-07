@@ -112,7 +112,7 @@ class ControlFlowGraphBuilder {
                     let branchIndex = method.queryOpcodeIndex(offset: lastOpcodeOfBlock.offset) + 1
                     let branchBlock = cfg.queryBlock(startIndex: branchIndex )
                     block.branch = branchBlock
-                    branchBlock.predecessors.append(block)
+                    branchBlock.addPredecessor(block)
                 case .goto:
                     block.type = .goto
                     break

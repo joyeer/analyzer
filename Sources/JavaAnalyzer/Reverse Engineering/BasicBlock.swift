@@ -23,14 +23,30 @@ class BasicBlock {
     
     var type: BlockType
     
+    var index: Int = 0
     var startAt: Int = -1
     var endAt: Int = -1
+    
+    weak var branch: BasicBlock? = nil
+    
+    private var _predecessors = [Weak<BasicBlock>]()
     var next: BasicBlock? = nil
-    var branch: BasicBlock? = nil
-    var condition: BasicBlock? = nil
-    var predecessors = [BasicBlock]()
+    
+    var predecessors: [BasicBlock] {
+        _predecessors.compactMap { $0.value }
+    }
+    
+    func addPredecessor(_ block: BasicBlock) {
+        _predecessors.append(Weak(block))
+    }
 }
 
+class Weak<T: AnyObject> {
+    weak var value: T?
+    init(_ value: T) {
+        self.value = value
+    }
+}
 
 class BasicBlockReader {
     var blocks: [BasicBlock]
