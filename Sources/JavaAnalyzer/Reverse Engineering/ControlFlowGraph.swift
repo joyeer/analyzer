@@ -46,7 +46,16 @@ class ControlFlowGraphBuilder {
     
     func build(_ method:Method) throws {
         if let opcodes = method.code?.opcodes {
-            var map = [Int]()
+            
+            /// Find leaders
+            /// A leader is the first instruction of a basic block.
+            /// The first instruction of the method is a leader.
+            /// Any instruction that is the target of a branch instruction is a leader.
+            /// Any instruction that is the target of a jump instruction is a leader.
+            /// Any instruction that is the first instruction after a branch instruction is a leader.
+            /// Any instruction that is the first instruction after a jump instruction is a leader.
+            /// Any instruction that is the first instruction after a return instruction is a leader.
+            var leaders = [Int]()
             var lastStatementIndex = -1
             try opcodes.enumerated().forEach { (index, opcode) in
                 switch opcode.kind {
@@ -56,19 +65,19 @@ class ControlFlowGraphBuilder {
                     lastStatementIndex = index
                 case .if:
                     if lastStatementIndex != -1 {
-                        map.append(lastStatementIndex)
+                        leaders.append(lastStatementIndex)
                     }
                     
-                    map.append(index)
+                    leaders.append(index)
                     let branchOffset = opcode.offset + opcode.value
                     let branchIndex = method.queryOpcodeIndex(offset: branchOffset)
-                    map.append(branchIndex - 1)
+                    leaders.append(branchIndex - 1)
                     lastStatementIndex = index
                 case .goto:
-                    map.append(index)
+                    leaders.append(index)
                     lastStatementIndex = index
                 case .return:
-                    map.append(index)
+                    leaders.append(index)
                     lastStatementIndex = index
                 case .invoke:
                     let methodInfo = try constant.readMethodInfo(opcode.value)
@@ -82,7 +91,7 @@ class ControlFlowGraphBuilder {
             
             // Build basic blocks
             var lastIndex = 0
-            map.forEach { index in
+            leaders.forEach { index in
                 let block = cfg.newBasicBlock(type: .deleted, startIndex: lastIndex, endIndex: index)
                 block.startAt = lastIndex
                 block.endAt = index

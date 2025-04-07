@@ -23,7 +23,6 @@ class BasicBlock {
     
     var type: BlockType
     
-    var index: Int = 0
     var startAt: Int = -1
     var endAt: Int = -1
     

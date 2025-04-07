@@ -4,10 +4,9 @@
 //
 //  Created by joyeer on 2023/4/15.
 //
-import XCTest
 @testable import JavaAnalyzer
 @testable import Common
-
+import Foundation
 
 func get(class: String) -> (Class, ClassFile) {
     
