@@ -5,13 +5,12 @@
 //  Created by joyeer on 2025/1/26.
 //
 
-
-
 enum BlockType {
     case goto
-    case deleted
-    case `if`
+    case gotoTenary
+    case conditional
     case statement
+    case deleted
 }
 
 
@@ -27,10 +26,9 @@ class BasicBlock {
     var endAt: Int = -1
     
     weak var branch: BasicBlock? = nil
-    
-    private var _predecessors = [Weak<BasicBlock>]()
     var next: BasicBlock? = nil
     
+    private var _predecessors = [Weak<BasicBlock>]()
     var predecessors: [BasicBlock] {
         _predecessors.compactMap { $0.value }
     }
