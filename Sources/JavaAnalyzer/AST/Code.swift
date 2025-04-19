@@ -61,6 +61,11 @@ public class Code : @unchecked Sendable {
     public func getOpcodeIndexForJumpIndex(offset:Int) -> Int? {
         return offsetOpcodeIndexMapping[offset]
     }
+    
+    public func getInstruction(offset: Int) -> JOpcode {
+        let index =  offsetOpcodeIndexMapping[offset]!
+        return opcodes[index]
+    }
 }
 
 extension Code {

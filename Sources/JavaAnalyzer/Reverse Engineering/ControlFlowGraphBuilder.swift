@@ -27,33 +27,32 @@ class ControlFlowGraphBuilder {
             /// Any instruction that is the first instruction after a jump instruction is a leader.
             /// Any instruction that is the first instruction after a return instruction is a leader.
             var leaders = [Int]()
-            var lastStatementIndex = -1
-            try opcodes.enumerated().forEach { (index, opcode) in
+            var lastStatementOffset = -1
+            try opcodes.forEach { opcode in
                 switch opcode.kind {
                 case .store, .const, .load, .load_constant, .new, .getstatic, .getfield, .checkcast, .instanceof:
                     break
                 case .push:
-                    lastStatementIndex = index
+                    lastStatementOffset = opcode.offset
                 case .if:
-                    if lastStatementIndex != -1 {
-                        leaders.append(lastStatementIndex)
+                    if lastStatementOffset != -1 {
+                        leaders.append(lastStatementOffset)
                     }
                     
-                    leaders.append(index)
+                    leaders.append(opcode.offset)
                     let branchOffset = opcode.offset + opcode.value
-                    let branchIndex = method.queryOpcodeIndex(offset: branchOffset)
-                    leaders.append(branchIndex - 1)
-                    lastStatementIndex = index
+                    leaders.append(branchOffset - 1)
+                    lastStatementOffset = opcode.offset
                 case .goto:
-                    leaders.append(index)
-                    lastStatementIndex = index
+                    leaders.append(opcode.offset)
+                    lastStatementOffset = opcode.offset
                 case .return:
-                    leaders.append(index)
-                    lastStatementIndex = index
+                    leaders.append(opcode.offset)
+                    lastStatementOffset = opcode.offset
                 case .invoke:
                     let methodInfo = try constant.readMethodInfo(opcode.value)
                     if let returnDescriptor = methodInfo.descriptor.returnType?.descriptor , returnDescriptor == "V" {
-                        lastStatementIndex = index
+                        lastStatementOffset = opcode.offset
                     }
                 default:
                     break
@@ -64,8 +63,8 @@ class ControlFlowGraphBuilder {
             var lastIndex = 0
             leaders.forEach { index in
                 let block = cfg.newBasicBlock(type: .deleted, startIndex: lastIndex, endIndex: index)
-                block.startAt = lastIndex
-                block.endAt = index
+                block.opcodeOffsetStart = lastIndex
+                block.opcodeOffsetEnd = index
                 lastIndex = index + 1
             }
             // Build Blocks
@@ -76,7 +75,7 @@ class ControlFlowGraphBuilder {
                 let index = reader.pos
 
                 // build the relationship among the Blocks
-                let lastOpcodeOfBlock = method.getOpcodeBy(index: block.endAt)
+                let lastOpcodeOfBlock = method.getOpcode(offset: block.opcodeOffsetEnd)
                 
                 switch lastOpcodeOfBlock.kind {
                 case .if:
@@ -85,28 +84,22 @@ class ControlFlowGraphBuilder {
                     block.type = .conditional
                     let branchOffset = lastOpcodeOfBlock.value + lastOpcodeOfBlock.offset
                     let branchIndex = method.queryOpcodeIndex(offset: branchOffset)
-                    let branchBlock = cfg.queryBlock(startIndex: branchIndex)
+                    let branchBlock = cfg.queryBlock(startOffset: branchIndex)
                     block.branch = branchBlock
                     
-                    let successor = cfg.queryBlock(startIndex: index + 1)
+                    let successor = cfg.queryBlock(startOffset: index + 1)
                     block.next = successor
                     
                     branchBlock.addPredecessor(block)
                 case .goto:
                     block.type = .goto
-                    let successor = cfg.queryBlock(startIndex: index + 1)
+                    let successor = cfg.queryBlock(startOffset: index + 1)
                     block.next = successor
                     break
                 case .invoke:
                     break
                 default:
                     block.type = .statement
-                    if let nextBlock = cfg.nextBlock(startIndex: index) {
-                        if nextBlock.predecessors.count == 0 {
-                            block.next = nextBlock
-                        }
-                    }
-                    
                     break
                 }
                 

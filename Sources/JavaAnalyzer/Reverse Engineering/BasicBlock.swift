@@ -22,8 +22,8 @@ class BasicBlock {
     
     var type: BlockType
     
-    var startAt: Int = -1
-    var endAt: Int = -1
+    var opcodeOffsetStart: Int = -1
+    var opcodeOffsetEnd: Int = -1
     
     weak var branch: BasicBlock? = nil
     var next: BasicBlock? = nil

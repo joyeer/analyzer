@@ -55,6 +55,10 @@ final public class Method {
         return -1
     }
     
+    public func getOpcode(offset: Int) -> JOpcode {
+        return code!.getInstruction(offset: offset)
+    }
+    
     public func queryOpcodeOffset(index: Int) -> Int {
         
         if let code = code {
@@ -62,11 +66,6 @@ final public class Method {
         }
         return -1
     }
-    
-    public func getOpcodeBy(index: Int) -> JOpcode {
-        return code!.opcodes[index]
-    }
-    
     /// for parameter name store in code attributes
     private func postProcessParameters() {
         if locals == nil {
